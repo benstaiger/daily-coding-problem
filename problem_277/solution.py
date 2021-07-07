@@ -1,3 +1,4 @@
+import doctest
 from enum import Enum
 
 # This problem was asked by Google.
@@ -28,22 +29,30 @@ def extract_byte(val, position):
     """
     Extracts one of the four bytes from an integer val
 
-    >>> extract_byte(0xff000000, 0) == 0x000000ff
+    >>> extract_byte(0x01234567, 0) == 0x01
     True
-    >>> extract_byte(0x00ff0000, 1) == 0x000000ff
+    >>> extract_byte(0x01234567, 1) == 0x23
+    True
+    >>> extract_byte(0x01234567, 2) == 0x45
+    True
+    >>> extract_byte(0x01234567, 3) == 0x67
     True
     """
     mask = 0xFF000000 >> (position * 8)
     return (val & mask) >> ((3 - position) * 8)
 
 
-def test_extract_byte():
-    assert extract_byte(0xFF000000, 0) == 0x000000FF
-    assert extract_byte(0x00FF0000, 1) == 0x000000FF
-    assert extract_byte(0x00AB0000, 1) == 0x000000AB
-    assert extract_byte(0x00ABBB00, 2) == 0x000000BB
-    assert extract_byte(0x00AB00EF, 3) == 0x000000EF
-    assert extract_byte(0x01234567, 0) == 0x00000001
+def read_bytes(ints):
+    """
+    Takes a list of integers and returns an iterable stream of bytes.
+    >>> list(read_bytes([0xAABBCCDD])) == [0xAA, 0xBB, 0xCC, 0xDD]
+    True
+    >>> list(read_bytes([0xAABBCCDD]*2)) == [0xAA, 0xBB, 0xCC, 0xDD]*2
+    True
+    """
+    for val in ints:
+        for position in range(4):
+            yield extract_byte(val, position)
 
 
 class Byte(Enum):
@@ -101,53 +110,50 @@ def idenitfy_utf8(ints):
     from the sequence to validate the serialization.
     """
 
-    class State(Enum):
-        WAITING_NEW = 0
-        WAITING_1_BYTES = 1
-        WAITING_2_BYTES = 2
-        WAITING_3_BYTES = 3
+    def failure(next_byte):
+        return failure
 
-    current_state = State.WAITING_NEW
-    for val in ints:
-        for b_idx in range(4):
-            byte = extract_byte(val, b_idx)
-            next_byte = identify_byte(byte)
-            next_state = current_state
-            if next_byte == Byte.BAD_SERIALIZATION:
-                return False
-            if current_state == State.WAITING_NEW:
-                if next_byte == Byte.DATA_BYTE_1:
-                    pass
-                elif next_byte == Byte.DATA_HEADER_2:
-                    next_state = State.WAITING_1_BYTES
-                elif next_byte == Byte.DATA_HEADER_3:
-                    next_state = State.WAITING_2_BYTES
-                elif next_byte == Byte.DATA_HEADER_4:
-                    next_state = State.WAITING_3_BYTES
-                else:
-                    return False
-            elif current_state == State.WAITING_1_BYTES:
-                if next_byte == Byte.DATA_BYTE_MANY:
-                    next_state = State.WAITING_NEW
-                else:
-                    return False
-            elif current_state == State.WAITING_2_BYTES:
-                if next_byte == Byte.DATA_BYTE_MANY:
-                    next_state = State.WAITING_1_BYTES
-                else:
-                    return False
-            elif current_state == State.WAITING_3_BYTES:
-                if next_byte == Byte.DATA_BYTE_MANY:
-                    next_state = State.WAITING_2_BYTES
-                else:
-                    return False
-            # print(f"{current_state} --({next_byte})--> {next_state}")
-            current_state = next_state
+    def waiting_1(next_byte):
+        if next_byte == Byte.DATA_BYTE_MANY:
+            return waiting
+        else:
+            return failure
 
-    if current_state != State.WAITING_NEW:
-        return False
-    else:
+    def waiting_2(next_byte):
+        if next_byte == Byte.DATA_BYTE_MANY:
+            return waiting_1
+        else:
+            return failure
+
+    def waiting_3(next_byte):
+        if next_byte == Byte.DATA_BYTE_MANY:
+            return waiting_2
+        else:
+            return failure
+
+    def waiting(next_byte):
+        if next_byte == Byte.BAD_SERIALIZATION:
+            return failure
+        if next_byte == Byte.DATA_BYTE_1:
+            return waiting
+        elif next_byte == Byte.DATA_HEADER_2:
+            return waiting_1
+        elif next_byte == Byte.DATA_HEADER_3:
+            return waiting_2
+        elif next_byte == Byte.DATA_HEADER_4:
+            return waiting_3
+
+    state = waiting
+    for byte in read_bytes(ints):
+        next_byte = identify_byte(byte)
+        state = state(next_byte)
+        if state == failure:
+            return False
+
+    if state == waiting:
         return True
+    else:
+        return False
 
 
 def test_identify_utf8():
@@ -180,10 +186,7 @@ def test_identify_utf8():
         + (many_data_byte << 8)
         + (data_byte)
     )
-    assert (
-        idenitfy_utf8(test_case + [header_int_few])
-        is False
-    )
+    assert idenitfy_utf8(test_case + [header_int_few]) is False
 
     # test mutiple-byte character with too many data
     header_int_many = (
@@ -192,10 +195,7 @@ def test_identify_utf8():
         + (many_data_byte << 8)
         + (many_data_byte)
     )
-    assert (
-        idenitfy_utf8(test_case + [header_int_many])
-        is False
-    )
+    assert idenitfy_utf8(test_case + [header_int_many]) is False
 
     # test wrapping across ints
     header_int_1 = (
@@ -210,13 +210,10 @@ def test_identify_utf8():
         + (data_byte << 8)
         + (data_byte)
     )
-    assert (
-        idenitfy_utf8(test_case + [header_int_1, header_int_2])
-        is True
-    )
+    assert idenitfy_utf8(test_case + [header_int_1, header_int_2]) is True
 
 
 if __name__ == "__main__":
-    test_extract_byte()
+    doctest.testmod()
     test_identify_byte()
     test_identify_utf8()
