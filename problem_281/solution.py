@@ -39,6 +39,10 @@ def find_cut(wall):
     There is likely not a better time complexity solution because this is
     essentially bounded on just reading the bricks unless we end up with
     a fairly degenerate case such as [[1e100]].
+
+    The degenerate case could instead be solved by using a default dict where
+    ther default value for any cut location is the number of rows. Then every
+    case would take at move O(B).
     """
     cuts = [len(wall) for i in range(sum(wall[0]) - 1)]
     # 0 indicates a cut after the first "1-unit" of brick.
