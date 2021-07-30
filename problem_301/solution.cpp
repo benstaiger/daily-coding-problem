@@ -67,6 +67,7 @@ class LinearProbingSet {
 
     size_t size() const { return Size; }
 
+    // There should probably be an && version of this operation.
     void add(const ValueType& v) {
         // This will not return false negatives but has a worst case O(N)
         // This is true of all hash-based containters. The "constant" time complexity
