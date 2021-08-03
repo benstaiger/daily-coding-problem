@@ -1,6 +1,7 @@
 # ignore testing artifacts
 __pycache__
 .pytest_cache
+build
 
 # dev-env artifacts
 .vscode
