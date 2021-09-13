@@ -1,0 +1,117 @@
+
+# This problem was asked by Zillow.
+# 
+# A ternary search tree is a trie-like data structure where each node may have
+# up to three children. Here is an example which represents the words code,
+# cob, be, ax, war, and we.
+# 
+#        c
+#     /  |  \
+#    b   o   w
+#  / |   |   |
+# a  e   d   a
+# |    / |   | \ 
+# x   b  e   r  e  
+# The tree is structured according to the following rules:
+# 
+# * left child nodes link to words lexicographically earlier than the parent
+# prefix
+# * right child nodes link to words lexicographically later than the parent
+# prefix
+# * middle child nodes continue the current word
+#
+# For instance, since code is the first word inserted in the tree, and cob
+# lexicographically precedes cod, cob is represented as a left child extending
+# from cod.
+# 
+# Implement insertion and search functions for a ternary search tree.
+
+class TernaryTree:
+    def __init__(self):
+        self.letter = None
+        self.left = None
+        self.right = None
+        self.middle = None
+
+    def prefix_find(self, word):
+        """
+        Find the node within the tree with the longest prefix of the input.
+        Returns the node and the remaining suffix.
+        """
+        suffix = word[1:]
+        if word[0] < self.letter:
+            if not self.left:
+                return self, word
+            return self.left.insert(word)
+        if word[0] == self.letter:
+            if not self.middle:
+                return self, suffix
+            return self.middle.insert(suffix)
+        if word[0] > self.letter:
+            if not self.right:
+                return self, suffix
+            return self.right.insert(word)
+
+    def insert(self, word):
+        if not self.letter:
+            self.letter = word[0]
+            if len(word) == 1:
+                return
+        tree, remaining = prefix_find(self, word)
+
+        suffix = word[1:]
+        if word[0] < self.letter:
+            if not self.left:
+                self.left = TernaryTree()
+            self.left.insert(word)
+        if word[0] == self.letter:
+            if not self.middle:
+                self.middle = TernaryTree()
+            self.middle.insert(suffix)
+        if word[0] > self.letter:
+            if not self.right:
+                self.right = TernaryTree()
+            self.right.insert(word)
+
+    def search(self, word):
+        suffix = word[1:]
+        if len(suffix) > 0:
+            if word[0] < self.letter:
+                if not self.left:
+                    return False
+                return self.left.insert(word)
+            if word[0] == self.letter:
+                if not self.middle:
+                    return False
+                return self.middle.insert(suffix)
+            if word[0] > self.letter:
+                if not self.right:
+                    return False
+                return self.right.insert(word)
+
+
+    def __repr__(self):
+        def cond_create(tree):
+            return "" if not tree else tree.__repr__()
+        kids = [cond_create(t) for t in [self.left, self.middle, self.right]]
+        return f"{self.letter}: [{', '.join(kids)}]" 
+
+
+def test_TernaryTree_insert():
+    root = TernaryTree()
+    root.insert("code")
+    root.insert("cob")
+    root.insert("be")
+    root.insert("ax")
+    root.insert("war")
+    root.insert("we")
+    assert root.letter == "c"
+    assert root.left.letter == "b"
+    assert root.middle.letter == "o"
+    assert root.right.letter == "w"
+    assert root.middle.middle.left.letter == "b"
+
+
+if __name__ == "__main__":
+    test_TernaryTree_insert()
+
