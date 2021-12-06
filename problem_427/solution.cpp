@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <queue>
 #include <unordered_map>
 #include <vector>
@@ -63,38 +64,41 @@ std::vector<int> findShortestHill(
     }
 
     std::priority_queue<PathType, std::vector<PathType>, std::greater<PathType>> closest;
+    std::vector<int> dists(elevation.size(), std::numeric_limits<int>::max());
+    // initial search with all nodes adjacent to the start
     for (const auto& [to, dist] : edges[0]) {
         // We can't start by going down.
         if (elevation[to] >= elevation[0]) {
             closest.emplace(dist, 0, to, true);
+            dists[to] = dist;
         }
     }
 
+    std::vector<int> shortest(elevation.size());
     // From a given point, we will continue our search along any node that
     // hasn't been seen yet and:
     //  a) continues upward, if we're still going up
     //  b) goes downward if we're going down
-    std::vector<bool> seen(elevation.size(), false);
-    std::vector<int> shortest(elevation.size());
     while (closest.size() > 0) {
         const auto [dist, from, to, ascending] = closest.top();
         closest.pop();
-        if (to == 0) {
+
+        if (to == 0) {  // short-circuit since this is all we care about.
             shortest[to] = from;
             break;
         }
-        if (!seen[to]) {
-            seen[to] = true;
+        if (dists[to] == dist) {  // shortest path to the node.
             shortest[to] = from;
-        } else {
-            continue;
-        }
-        for (const auto& [to_next, dist_next] : edges[to]) {
-            if (!seen[to_next]) {
-                if (ascending && elevation[to_next] >= elevation[to]) {
-                    closest.emplace(dist + dist_next, to, to_next, true);
-                } else if (elevation[to_next] < elevation[to]) {
-                    closest.emplace(dist + dist_next, to, to_next, false);
+
+            for (const auto& [to_next, dist_next] : edges[to]) {
+                const int total_dist = dist + dist_next;
+                if (dists[to_next] > total_dist) {
+                    dists[to_next] = total_dist;
+                    if (ascending && elevation[to_next] >= elevation[to]) {
+                        closest.emplace(total_dist, to, to_next, true);
+                    } else if (elevation[to_next] < elevation[to]) {
+                        closest.emplace(total_dist, to, to_next, false);
+                    }
                 }
             }
         }
