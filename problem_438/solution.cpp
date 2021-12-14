@@ -19,17 +19,11 @@ template<typename T>
 class Stack {
   public:
     void push(const T& val) {
-        if (count == std::numeric_limits<size_t>::max()) {
-            throw std::exception();
-        }
-        _data.push(std::make_pair(++count, val));
+        _data.push(std::make_pair(_data.size(), val));
     }
 
     void push(T&& val) {
-        if (count == std::numeric_limits<size_t>::max()) {
-            throw std::exception();
-        }
-        _data.push(std::make_pair(++count, val));
+        _data.push(std::make_pair(_data.size(), val));
     }
 
     T pop() {
@@ -41,7 +35,6 @@ class Stack {
         return res;
     }
   private:
-    size_t count = 0;
     std::priority_queue<std::pair<int, T>> _data;
 };
 
@@ -57,5 +50,8 @@ int main() {
     assert(test.pop() == 4);
     assert(test.pop() == 3);
     assert(test.pop() == 2);
+
+    test.push(7);
+    assert(test.pop() == 7);
     assert(test.pop() == 1);
 }
