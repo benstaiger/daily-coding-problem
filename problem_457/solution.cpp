@@ -44,7 +44,11 @@ std::ostream& operator<<(std::ostream& stream, const std::unordered_multiset<cha
     return stream;
 }
 
-
+// Use a sliding-window approach to determine if the letters in our sequence
+// are an anagram of the word by maintaining a hash-multiset of the letters
+// that potentiall remain in the word at any point in time.
+// The update at each step should take O(1) so the overall runtime is O(N + K)
+// for a sequence of length N and a word of length K.
 std::vector<size_t> AnagramsRolling(std::string_view word, std::string_view sequence) {
     if (sequence.size() < word.size()) return {};
     std::vector<size_t> positions;
@@ -67,6 +71,9 @@ std::vector<size_t> AnagramsRolling(std::string_view word, std::string_view sequ
         if (i >= (word.size() - 1)) {
             const char leaving = sequence[i + 1 - word.size()];
             auto pos = wordLetters.find(leaving);
+
+            // this count operation will potentially take O(K) time, but we could simplify
+            // it to O(1) by using a map of letters to counts.
             if (pos != wordLetters.end() && wordLetters.count(leaving) > remainingLetters.count(leaving)) {
                 remainingLetters.insert(leaving);
             }
