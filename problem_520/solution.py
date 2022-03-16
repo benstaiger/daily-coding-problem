@@ -16,9 +16,6 @@
 # Given this representation, determine the depth of the tree.
 
 
-from tkinter import W
-
-
 def tree_depth(serial):
     # the deepest point is where we have the most unpaired parenthesis.
     count = 0
