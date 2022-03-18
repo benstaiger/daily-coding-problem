@@ -16,9 +16,8 @@ def furthest_index(values):
     # for each index we will determine what is the furthest we can reach
     # in a dynamic programming fashion.
     reach = [0 for _ in values]
-    reach[0] = values[0]
     furthest_reachable = reach[0]
-    for i, v in enumerate(values[1:]):
+    for i, v in enumerate(values):
         if i > furthest_reachable:
             return False
         reach[i] = i + v
