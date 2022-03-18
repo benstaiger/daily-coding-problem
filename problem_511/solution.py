@@ -14,15 +14,16 @@ def jumps_to(values):
     # In a dynamic programming approach, find the minimum number of jumps
     # to reach a given location.
 
-    # O(N^2)
-    jumps = [float("inf") for _ in values]
-    jumps[0] = 0
+    # O(N)
+    jumps = 0
+    current_reachable = 0
+    furthest_reachable = 0
     for i, v in enumerate(values):
-        for j in range(1, v+1):
-            if i + j >= len(values):
-                break
-            jumps[i + j] = min(jumps[i] + 1, jumps[i + j])
-    return jumps[-1]
+        if i > current_reachable:
+            jumps += 1
+            current_reachable = furthest_reachable
+        furthest_reachable = max(furthest_reachable, i + v)
+    return jumps
 
 
 def test_jumps_to():
