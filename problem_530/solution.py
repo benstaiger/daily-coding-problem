@@ -34,7 +34,6 @@ def edit_distance(word1, word2):
     return score_table[len(word1)][len(word2)]
 
 
-
 def test_edit_distance():
     assert edit_distance("a", "b") == 1
     assert edit_distance("a", "a") ==  0
