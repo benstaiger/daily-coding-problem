@@ -3,5 +3,8 @@ __pycache__
 .pytest_cache
 build
 
+# ignore rust artifacts
+target
+
 # dev-env artifacts
 .vscode
