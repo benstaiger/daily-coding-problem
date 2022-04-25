@@ -10,7 +10,7 @@
 //
 // Follow-up: what if you can't use division?
 
-fn prod_div(data: &[i32]) -> Vec<i32> {
+fn _prod_div(data: &[i32]) -> Vec<i32> {
     let total: i32 = data.into_iter().product();
     data.iter().map(|&v| total / v).collect()
 }
