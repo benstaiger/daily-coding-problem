@@ -16,7 +16,7 @@ class Tree():
         self.right = right
 
 
-def is_binary_tree(tree) -> tuple[bool, int, int]:
+def is_binary_tree(tree) -> "tuple[bool, int, int]":
     # As written, it doesn't actually state that ALL nodes in the left/right
     # tree need to be less/greater than the value of the root. But this is
     # the check that we will run because otherwise it really dosen't function
